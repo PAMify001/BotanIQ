@@ -1,0 +1,51 @@
+{
+  "crop": "Tomato",
+  "project_scope": "Focused 5-Class Detection",
+  "disease_data": [
+    {
+      "id": "early_blight",
+      "name": "Early Blight",
+      "symptoms": "Small, dark spots with concentric rings that look like a target. It usually starts on the oldest leaves near the ground and turns them yellow.",
+      "cause": "A soil-borne fungus called Alternaria solani.",
+      "organic_treatment": "Prune infected lower leaves and apply Neem oil or a baking soda spray to reduce spread.",
+      "chemical_treatment": "Apply fungicides containing Chlorothalonil or Copper-based sprays every 7 to 10 days.",
+      "prevention": "Rotate crops every 2 years, use mulch to prevent soil splash, and avoid overhead watering."
+    },
+    {
+      "id": "septoria_leaf_spot",
+      "name": "Septoria Leaf Spot",
+      "symptoms": "Numerous small, circular spots with dark borders and greyish-white centers. Tiny black specks may appear inside the spots.",
+      "cause": "A fungus that thrives in high humidity and wet foliage.",
+      "organic_treatment": "Remove and destroy all infected leaves immediately. Improve airflow by staking the plants.",
+      "chemical_treatment": "Use fungicides containing Mancozeb or Potassium Bicarbonate.",
+      "prevention": "Keep leaves dry by using drip irrigation and ensure 24-inch spacing between plants."
+    },
+    {
+      "id": "late_blight",
+      "name": "Late Blight",
+      "symptoms": "Large, irregular greenish-black water-soaked patches on leaves. In humid weather, a white fuzzy growth may appear on the leaf undersides.",
+      "cause": "An aggressive water mold (Phytophthora infestans).",
+      "organic_treatment": "There is no cure. Pull out the entire plant and bag it immediately to prevent spore travel.",
+      "chemical_treatment": "Preventative spraying with Copper fungicides is effective, but once the disease is visible, chemicals rarely save the plant.",
+      "prevention": "Plant resistant varieties and destroy all potato tubers or volunteer tomatoes from the previous year."
+    },
+    {
+      "id": "bacterial_spot",
+      "name": "Bacterial Spot",
+      "symptoms": "Small, water-soaked spots that eventually turn dark brown and look 'scabby' or greasy. Can also cause spots on the fruit.",
+      "cause": "Bacteria spread by wind-blown rain and contaminated tools.",
+      "organic_treatment": "Apply a liquid copper spray. Remove any heavily infected plants to protect the rest of the crop.",
+      "chemical_treatment": "A combination spray of Copper and Mancozeb is the standard treatment.",
+      "prevention": "Only plant certified disease-free seeds and avoid handling plants when they are wet with dew or rain."
+    },
+    {
+      "id": "healthy",
+      "name": "Healthy Tomato Leaf",
+      "symptoms": "Leaves are vibrant green, firm, and free of spots, holes, or fuzzy growth.",
+      "cause": "Optimal growth conditions and good hygiene.",
+      "organic_treatment": "Maintain current care routine.",
+      "chemical_treatment": "No chemicals required.",
+      "prevention": "Continue to clean your gardening tools after each use and monitor for pests like aphids weekly."
+    }
+  ]
+}

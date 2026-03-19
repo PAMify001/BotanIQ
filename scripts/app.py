@@ -190,9 +190,16 @@ else:
 
     if process_button and input_image is not None:
         with st.spinner("Analyzing leaf..."):
-            pred_vector = predict_disease(input_image)
-            # compute once and reuse
-            pred_vector = predict_disease(input_image)
+            try:
+                pred_vector = predict_disease(input_image)
+            except Exception as e:
+                st.error(f"Model loading/prediction failed: {e}")
+                st.stop()
+
+            if pred_vector is None:
+                st.error("Prediction failed: the model did not return results.")
+                st.stop()
+
             prediction_index = np.argmax(pred_vector, axis=1)[0].item()
             # speak using TTS and capture audio path
             # convert slider->rate before calling say_disease

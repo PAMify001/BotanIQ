@@ -169,30 +169,43 @@ def resize_and_rescale(image_path,target_size=(256,256)):
     
 
 # this function loads the model from huggingface hub
-@st.cache_resource 
+@st.cache_resource
 def load_model():
+    # Import TensorFlow lazily so the app can fail fast with a clear message
     try:
-        # Try to load from local file first
-        model_path = os.path.join(os.path.dirname(__file__), "..", "..", "botaniq_model.keras")
-        if os.path.exists(model_path):
-            model = tf.keras.models.load_model(model_path)
-            return model
-        else:
-            # Fallback to HuggingFace if local file doesn't exist
-            model_path = hf_hub_download(repo_id=REPO_ID,
-                                          filename=FILENAME,
-                                          token=st.secrets["HF_TOKEN"])
-            model = tf.keras.models.load_model(model_path)
-            return model
+        import tensorflow as tf
     except Exception as e:
-        # If all else fails, try to load from HuggingFace without token (if public)
+        raise RuntimeError(
+            "TensorFlow is not available in this environment. "
+            "Ensure your requirements include a compatible TensorFlow package (e.g., tensorflow-cpu==2.13.0) "
+            "and that the Streamlit Cloud runtime is set to Python 3.11."
+        ) from e
+
+    def _load_from_path(path: str):
         try:
-            model_path = hf_hub_download(repo_id=REPO_ID,
-                                          filename=FILENAME)
-            model = tf.keras.models.load_model(model_path)
-            return model
-        except:
-            raise Exception(f"Could not load model: {str(e)}") 
+            return tf.keras.models.load_model(path)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load Keras model from {path}: {e}") from e
+
+    # Try local file first (useful for local development)
+    local_path = os.path.join(os.path.dirname(__file__), "..", "..", "botaniq_model.keras")
+    if os.path.exists(local_path):
+        return _load_from_path(local_path)
+
+    # Otherwise download from Hugging Face (public repo)
+    hf_token = st.secrets.get("HF_TOKEN")
+    try:
+        if hf_token:
+            model_path = hf_hub_download(repo_id=REPO_ID, filename=FILENAME, token=hf_token)
+        else:
+            model_path = hf_hub_download(repo_id=REPO_ID, filename=FILENAME)
+        return _load_from_path(model_path)
+    except Exception as e:
+        raise RuntimeError(
+            "Could not download or load the model from Hugging Face. "
+            "If your repo is private, set HF_TOKEN in Streamlit secrets. "
+            f"Underlying error: {e}"
+        ) from e
 
 #local_model = tf.keras.models.load_model(model_path) # the local model path
 # model = load_model() # the huggingface model path - removed to avoid loading at import time

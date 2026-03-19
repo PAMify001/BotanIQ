@@ -13,7 +13,8 @@ from huggingface_hub import hf_hub_download
 #model_path  = os.path.join(base_path,"botaniq_model.keras")
 
 REPO_ID = "PAMify001/BotanIQ_Model"
-FILENAME = "botaniq_model.keras"
+KERAS_FILENAME = "botaniq_model.keras"
+ONNX_FILENAME = "botaniq_model.onnx"
 
 
 # Voice functions for TTS - tries pyttsx3 first, falls back to Windows System.Speech
@@ -168,27 +169,35 @@ def resize_and_rescale(image_path,target_size=(256,256)):
     
     
 
-# this function loads the model from huggingface hub
+# this function loads the model from Hugging Face (ONNX runtime)
 @st.cache_resource
 def load_model():
-    # Import TensorFlow lazily so the app can fail fast with a clear message
+    """Load the ONNX model via onnxruntime.
+
+    Streamlit Cloud currently runs Python 3.14, where TensorFlow wheels are not
+    available. Therefore we use ONNX Runtime (which supports Python 3.14) and
+    load a model file named `botaniq_model.onnx`.
+
+    If you do not yet have an ONNX model in the repo, you must convert the
+    original Keras model to ONNX and upload it alongside the repo.
+    """
+
     try:
-        import tensorflow as tf
+        import onnxruntime as ort
     except Exception as e:
         raise RuntimeError(
-            "TensorFlow is not available in this environment. "
-            "Ensure your requirements include a compatible TensorFlow package (e.g., tensorflow-cpu==2.13.0) "
-            "and that the Streamlit Cloud runtime is set to Python 3.11."
+            "onnxruntime is not available in this environment. "
+            "Ensure requirements.txt includes 'onnxruntime' and redeploy."
         ) from e
 
     def _load_from_path(path: str):
         try:
-            return tf.keras.models.load_model(path)
+            return ort.InferenceSession(path, providers=["CPUExecutionProvider"])
         except Exception as e:
-            raise RuntimeError(f"Failed to load Keras model from {path}: {e}") from e
+            raise RuntimeError(f"Failed to load ONNX model from {path}: {e}") from e
 
     # Try local file first (useful for local development)
-    local_path = os.path.join(os.path.dirname(__file__), "..", "..", "botaniq_model.keras")
+    local_path = os.path.join(os.path.dirname(__file__), "..", "..", ONNX_FILENAME)
     if os.path.exists(local_path):
         return _load_from_path(local_path)
 
@@ -196,14 +205,14 @@ def load_model():
     hf_token = st.secrets.get("HF_TOKEN")
     try:
         if hf_token:
-            model_path = hf_hub_download(repo_id=REPO_ID, filename=FILENAME, token=hf_token)
+            model_path = hf_hub_download(repo_id=REPO_ID, filename=ONNX_FILENAME, token=hf_token)
         else:
-            model_path = hf_hub_download(repo_id=REPO_ID, filename=FILENAME)
+            model_path = hf_hub_download(repo_id=REPO_ID, filename=ONNX_FILENAME)
         return _load_from_path(model_path)
     except Exception as e:
         raise RuntimeError(
-            "Could not download or load the model from Hugging Face. "
-            "If your repo is private, set HF_TOKEN in Streamlit secrets. "
+            "Could not download or load the ONNX model from Hugging Face. "
+            "Make sure the file exists in your repo and is named 'botaniq_model.onnx'. "
             f"Underlying error: {e}"
         ) from e
 
@@ -221,8 +230,16 @@ def predict_disease(image):
     #print(image_to_predict)
     # making prediction - checks if the image preprocessing was successful
     if image_to_predict is not None:
-        prediction = model.predict(image_to_predict) # this makes the prediction
-        #prediction = local_model.predict(image_to_predict) # this makes the prediction
+        # If using ONNX, we need to run inference through the session
+        if hasattr(model, 'run'):
+            # ONNX Runtime expects input names; use the first input name
+            input_name = model.get_inputs()[0].name
+            prediction = model.run(None, {input_name: image_to_predict.astype('float32')})
+            # model.run returns a list of outputs; use the first
+            prediction = prediction[0]
+        else:
+            prediction = model.predict(image_to_predict)  # fallback for Keras
+
         print(prediction)
 
         # this returns the prediction made by the model

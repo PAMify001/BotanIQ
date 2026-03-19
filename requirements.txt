@@ -11,5 +11,6 @@ tensorflow_cpu
 Pillow
 split-folders
 python-dotenv
+pyttsx3
 huggingface_hub
 opencv-python-headless

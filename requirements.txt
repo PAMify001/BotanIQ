@@ -7,7 +7,7 @@ matplotlib
 seaborn
 scikit-learn
 numpy
-tensorflow_cpu
+tensorflow
 Pillow
 split-folders
 python-dotenv

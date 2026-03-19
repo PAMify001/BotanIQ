@@ -7,7 +7,6 @@ matplotlib
 seaborn
 scikit-learn
 numpy
-tensorflow==2.18.0
 Pillow
 split-folders
 python-dotenv

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "botaniq"
+version = "1.0"
+description = "BotanIQ - Tomato Plant Disease Detection"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "streamlit",
+    "pandas",
+    "matplotlib",
+    "seaborn",
+    "scikit-learn",
+    "numpy",
+    "Pillow",
+    "split-folders",
+    "python-dotenv",
+    "pyttsx3",
+    "huggingface_hub",
+    "opencv-python-headless",
+    "tensorflow-cpu==2.13.0",
+]
+
+[tool.streamlit]

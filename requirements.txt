@@ -13,4 +13,4 @@ python-dotenv
 pyttsx3
 huggingface_hub
 opencv-python-headless
-onnxruntime
+tensorflow-cpu==2.13.0

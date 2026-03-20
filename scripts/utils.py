@@ -2,8 +2,7 @@ from PIL import Image
 import streamlit as st
 import numpy as np
 import os
-
-
+import tensorflow as tf
 
 from io import BytesIO
 from huggingface_hub import hf_hub_download
@@ -13,8 +12,9 @@ from huggingface_hub import hf_hub_download
 #model_path  = os.path.join(base_path,"botaniq_model.keras")
 
 REPO_ID = "PAMify001/BotanIQ_Model"
-KERAS_FILENAME = "botaniq_model.keras"
-ONNX_FILENAME = "botaniq_model.onnx"
+FILENAME = "botaniq_model.keras"
+
+# Do NOT load model at import time; this is done lazily in load_model()
 
 
 # Voice functions for TTS - tries pyttsx3 first, falls back to Windows System.Speech
@@ -169,52 +169,31 @@ def resize_and_rescale(image_path,target_size=(256,256)):
     
     
 
-# this function loads the model from Hugging Face (ONNX runtime)
-@st.cache_resource
+# this function loads the model from huggingface hub
+@st.cache_resource 
 def load_model():
-    """Load the ONNX model via onnxruntime.
-
-    Streamlit Cloud currently runs Python 3.14, where TensorFlow wheels are not
-    available. Therefore we use ONNX Runtime (which supports Python 3.14) and
-    load a model file named `botaniq_model.onnx`.
-
-    If you do not yet have an ONNX model in the repo, you must convert the
-    original Keras model to ONNX and upload it alongside the repo.
-    """
-
     try:
-        import onnxruntime as ort
-    except Exception as e:
-        raise RuntimeError(
-            "onnxruntime is not available in this environment. "
-            "Ensure requirements.txt includes 'onnxruntime' and redeploy."
-        ) from e
-
-    def _load_from_path(path: str):
-        try:
-            return ort.InferenceSession(path, providers=["CPUExecutionProvider"])
-        except Exception as e:
-            raise RuntimeError(f"Failed to load ONNX model from {path}: {e}") from e
-
-    # Try local file first (useful for local development)
-    local_path = os.path.join(os.path.dirname(__file__), "..", "..", ONNX_FILENAME)
-    if os.path.exists(local_path):
-        return _load_from_path(local_path)
-
-    # Otherwise download from Hugging Face (public repo)
-    hf_token = st.secrets.get("HF_TOKEN")
-    try:
-        if hf_token:
-            model_path = hf_hub_download(repo_id=REPO_ID, filename=ONNX_FILENAME, token=hf_token)
+        # Try to load from local file first
+        model_path = os.path.join(os.path.dirname(__file__), "..", "..", "botaniq_model.keras")
+        if os.path.exists(model_path):
+            model = tf.keras.models.load_model(model_path)
+            return model
         else:
-            model_path = hf_hub_download(repo_id=REPO_ID, filename=ONNX_FILENAME)
-        return _load_from_path(model_path)
+            # Fallback to HuggingFace if local file doesn't exist
+            model_path = hf_hub_download(repo_id=REPO_ID,
+                                          filename=FILENAME,
+                                          token=st.secrets["HF_TOKEN"])
+            model = tf.keras.models.load_model(model_path)
+            return model
     except Exception as e:
-        raise RuntimeError(
-            "Could not download or load the ONNX model from Hugging Face. "
-            "Make sure the file exists in your repo and is named 'botaniq_model.onnx'. "
-            f"Underlying error: {e}"
-        ) from e
+        # If all else fails, try to load from HuggingFace without token (if public)
+        try:
+            model_path = hf_hub_download(repo_id=REPO_ID,
+                                          filename=FILENAME)
+            model = tf.keras.models.load_model(model_path)
+            return model
+        except:
+            raise Exception(f"Could not load model: {str(e)}") 
 
 #local_model = tf.keras.models.load_model(model_path) # the local model path
 # model = load_model() # the huggingface model path - removed to avoid loading at import time
@@ -230,19 +209,8 @@ def predict_disease(image):
     #print(image_to_predict)
     # making prediction - checks if the image preprocessing was successful
     if image_to_predict is not None:
-        # If using ONNX, we need to run inference through the session
-        if hasattr(model, 'run'):
-            # ONNX Runtime expects input names; use the first input name
-            input_name = model.get_inputs()[0].name
-            prediction = model.run(None, {input_name: image_to_predict.astype('float32')})
-            # model.run returns a list of outputs; use the first
-            prediction = prediction[0]
-        else:
-            prediction = model.predict(image_to_predict)  # fallback for Keras
-
+        prediction = model.predict(image_to_predict)
         print(prediction)
-
-        # this returns the prediction made by the model
         return prediction
         
         

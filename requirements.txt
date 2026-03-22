@@ -13,4 +13,4 @@ python-dotenv
 pyttsx3
 huggingface_hub
 opencv-python-headless
-tensorflow
+tensorflow-cpu

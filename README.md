@@ -54,6 +54,14 @@ Deploy to services like:
 - **AWS/GCP/Azure**
 - **Railway** or **Render**
 
+**Recommended cloud build/start commands**
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+streamlit run scripts/app.py --server.port $PORT --server.headless true --server.address 0.0.0.0
+```
+
 #### Option 3: Mobile App Conversion
 Convert to native app using:
 - **PWA** (Progressive Web App) capabilities
@@ -63,7 +71,7 @@ Convert to native app using:
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.11+
 - Windows/macOS/Linux
 - 4GB+ RAM recommended
 
@@ -152,7 +160,8 @@ Deploy to a cloud service and access via public URL from any device.
 
 **TTS not working:**
 - On mobile: Check browser permissions for audio
-- On desktop: Ensure Windows speech voices are installed
+- On desktop: Ensure Windows speech voices are installed when running locally
+- On Render/Railway: cloud TTS may not be available; use pre-generated mp3 with `st.audio()` or handle gracefully in code
 
 **Model download fails:**
 - Check internet connection
